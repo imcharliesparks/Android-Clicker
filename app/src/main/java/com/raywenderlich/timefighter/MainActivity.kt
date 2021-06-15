@@ -3,6 +3,8 @@ package com.raywenderlich.timefighter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.PersistableBundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -16,10 +18,20 @@ class MainActivity : AppCompatActivity() {
     internal lateinit var gameScoreTextView: TextView
     internal lateinit var timeLeftTextView: TextView
     internal lateinit var countDownTimer: CountDownTimer
+    internal var timeLeftOnTimer: Long = 60000
+
+
+    companion object {
+        private val TAG: String = MainActivity::class.java.simpleName
+        private const val SCORE_KEY: String = "SCORE_KEY"
+        private const val TIME_LEFT_KEY: String = "TIME_LEFT_KEY"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Log.d(TAG, "In onCreate. Current value: $currentScore")
 
         tapMeButton = findViewById(R.id.tapMeButton)
         gameScoreTextView = findViewById(R.id.gameScoreTextView)
@@ -28,6 +40,18 @@ class MainActivity : AppCompatActivity() {
         tapMeButton.setOnClickListener{ view -> incrementScore() }
 
         resetGame()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle){
+        super.onSaveInstanceState(outState)
+        outState.putInt(SCORE_KEY, currentScore)
+        outState.putLong(TIME_LEFT_KEY, timeLeftOnTimer)
+        countDownTimer.cancel()
+        Log.d(TAG, "onSaveInstanceState called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     private fun resetGame() {
@@ -39,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
         countDownTimer = object : CountDownTimer(initialCountDown, countDownInterval) {
             override fun onTick(millisUntilFinished: Long) {
-                println(millisUntilFinished)
+                timeLeftOnTimer = millisUntilFinished
                 val timeLeft = millisUntilFinished / 1000
                 timeLeftTextView.text = getString(R.string.timeLeft, timeLeft)
             }
